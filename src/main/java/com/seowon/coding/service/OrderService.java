@@ -164,6 +164,11 @@ public class OrderService {
      * - 리뷰 포인트: proxy 및 transaction 분리, 예외 전파/롤백 범위, 가독성 등
      * - 상식적인 수준에서 요구사항(기획)을 가정하며 최대한 상세히 작성하세요.
      */
+    //1. try-catch 구문 안에 log가 있으면 좋을 것 같습니다.
+    //2. proxy가 bulkShipOrdersParent함수를 호출하지만
+    //   Propagation.REQUIRES_NEW 처리를 했더라도 같은 클래스내에서 updateProgressRequiresNew 함수를 호출하면 트랜잭션이 실패할 수 있기 때문에
+    //   updateProgressRequiresNew() 메서드를 다른 서비스 코드로 분리하는 것이 좋아보입니다.
+    //3. 사용자가 많을 시에 orderIds 안에 건수가 많을 수 있기 때문에 for문 안에서 조회를 하는 것 보다는 배치처리를 하는 것이 좀 더 적합해보입니다.
     @Transactional
     public void bulkShipOrdersParent(String jobId, List<Long> orderIds) {
         ProcessingStatus ps = processingStatusRepository.findByJobId(jobId)
