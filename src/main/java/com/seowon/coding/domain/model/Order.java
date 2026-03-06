@@ -40,13 +40,38 @@ public class Order {
     
     private BigDecimal totalAmount;
 
+    public void calTotalAmount(BigDecimal subtotal,String couponCode,BigDecimal total) {
+        BigDecimal shipping = subtotal.compareTo(new BigDecimal("100.00")) >= 0 ? BigDecimal.ZERO : new BigDecimal("5.00");
+        BigDecimal discount = (couponCode != null && couponCode.startsWith("SALE")) ? new BigDecimal("10.00") : BigDecimal.ZERO;
+
+        total= total.add(subtotal.add(shipping).subtract(discount));
+        this.totalAmount = total;
+    }
+
     public static Order createOrder(String customerName, String customerEmail, BigDecimal totalAmount) {
+        if (customerName == null || customerEmail == null) {
+            throw new IllegalArgumentException("customer info required");
+        }
         return Order.builder()
             .customerName(customerName)
             .customerEmail(customerEmail)
             .totalAmount(totalAmount)
             .orderDate(LocalDateTime.now())
             .status(PENDING)
+            .build();
+    }
+    public static Order create(String customerName, String customerEmail) {
+        if (customerName == null || customerEmail == null) {
+            throw new IllegalArgumentException("customer info required");
+        }
+
+        return Order.builder()
+            .customerName(customerName)
+            .customerEmail(customerEmail)
+            .status(Order.OrderStatus.PENDING)
+            .orderDate(LocalDateTime.now())
+            .items(new ArrayList<>())
+            .totalAmount(BigDecimal.ZERO)
             .build();
     }
     

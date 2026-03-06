@@ -35,12 +35,30 @@ public class OrderItem {
         Product product,
         int quantity,
         BigDecimal price) {
+
         return OrderItem.builder()
             .product(product)
             .quantity(quantity)
             .price(price)
             .build();
     }
+    public static OrderItem createOrderItem(
+        Order order,Product product, int quantity, BigDecimal price
+    ){
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("quantity must be positive: " + quantity);
+        }
+        if (product.getStockQuantity() < quantity) {
+            throw new IllegalStateException("insufficient stock for product " + product.getId());
+        }
+        return OrderItem.builder()
+            .order(order)
+            .product(product)
+            .quantity(quantity)
+            .price(product.getPrice())
+            .build();
+    }
+
     
     // Business logic
     public BigDecimal getSubtotal() {

@@ -107,21 +107,14 @@ public class OrderService {
                                String customerEmail,
                                List<OrderProduct> orderProducts,
                                String couponCode) {
-        if (customerName == null || customerEmail == null) {
-            throw new IllegalArgumentException("customer info required");
-        }
+
         if (orderProducts == null || orderProducts.isEmpty()) {
             throw new IllegalArgumentException("orderReqs invalid");
         }
 
-        Order order = Order.builder()
-                .customerName(customerName)
-                .customerEmail(customerEmail)
-                .status(Order.OrderStatus.PENDING)
-                .orderDate(LocalDateTime.now())
-                .items(new ArrayList<>())
-                .totalAmount(BigDecimal.ZERO)
-                .build();
+        Order order = Order.create(
+                customerName,
+                customerEmail);
 
 
         BigDecimal subtotal = BigDecimal.ZERO;
@@ -131,29 +124,17 @@ public class OrderService {
 
             Product product = productRepository.findById(pid)
                     .orElseThrow(() -> new IllegalArgumentException("Product not found: " + pid));
-            if (qty <= 0) {
-                throw new IllegalArgumentException("quantity must be positive: " + qty);
-            }
-            if (product.getStockQuantity() < qty) {
-                throw new IllegalStateException("insufficient stock for product " + pid);
-            }
 
-            OrderItem item = OrderItem.builder()
-                    .order(order)
-                    .product(product)
-                    .quantity(qty)
-                    .price(product.getPrice())
-                    .build();
-            order.getItems().add(item);
+            OrderItem item = OrderItem.createOrderItem(
+                order,product,qty,product.getPrice());
+            order.addItem(item);
 
             product.decreaseStock(qty);
             subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(qty)));
         }
 
-        BigDecimal shipping = subtotal.compareTo(new BigDecimal("100.00")) >= 0 ? BigDecimal.ZERO : new BigDecimal("5.00");
-        BigDecimal discount = (couponCode != null && couponCode.startsWith("SALE")) ? new BigDecimal("10.00") : BigDecimal.ZERO;
+        order.calTotalAmount(subtotal,couponCode,BigDecimal.ZERO);
 
-        order.setTotalAmount(subtotal.add(shipping).subtract(discount));
         order.setStatus(Order.OrderStatus.PROCESSING);
         return orderRepository.save(order);
     }
