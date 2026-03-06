@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,20 +67,26 @@ public class ProductService {
         if (productIds == null || productIds.isEmpty()) {
             throw new IllegalArgumentException("empty productIds");
         }
-        // 잘못된 구현 예시: double 사용, 루프 내 개별 조회/저장, 하드코딩 세금/반올림 규칙
-        for (Long id : productIds) {
-            Product p = productRepository.findById(id)
-                    .orElseThrow(() -> new IllegalArgumentException("Product not found: " + id));
+        List<Product> products = productRepository.findByIdIn(productIds);
 
-            double base = p.getPrice() == null ? 0.0 : p.getPrice().doubleValue();
-            double changed = base + (base * (percentage / 100.0)); // 부동소수점 오류 가능
+        if (products == null || products.isEmpty()) {
+            throw new IllegalArgumentException("empty products");
+        }
+        // 잘못된 구현 예시: double 사용, 루프 내 개별 조회/저장, 하드코딩 세금/반올림 규칙
+        for (Product p : products) {
+
+            BigDecimal base = p.getPrice() == null ? BigDecimal.ZERO : BigDecimal.valueOf(p.getPrice().doubleValue());
+            BigDecimal rate= BigDecimal.valueOf(percentage).divide(BigDecimal.valueOf(100.0));
+            BigDecimal changed = base.add(base.multiply(rate));
+
             if (includeTax) {
-                changed = changed * 1.1; // 하드코딩 VAT 10%, 지역/카테고리별 규칙 미반영
+                changed = changed.multiply(BigDecimal.valueOf(0.1)); // 하드코딩 VAT 10%, 지역/카테고리별 규칙 미반영
             }
             // 임의 반올림: 일관되지 않은 스케일/반올림 모드
-            BigDecimal newPrice = BigDecimal.valueOf(changed).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal newPrice = changed.setScale(2, RoundingMode.HALF_UP);
             p.setPrice(newPrice);
-            productRepository.save(p); // 루프마다 저장 (비효율적)
+            products.add(p);
         }
+        productRepository.saveAll(products);
     }
 }
