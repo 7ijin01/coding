@@ -1,5 +1,7 @@
 package com.seowon.coding.domain.model;
 
+import static com.seowon.coding.domain.model.Order.OrderStatus.*;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,6 +39,16 @@ public class Order {
     private List<OrderItem> items = new ArrayList<>();
     
     private BigDecimal totalAmount;
+
+    public static Order createOrder(String customerName, String customerEmail, BigDecimal totalAmount) {
+        return Order.builder()
+            .customerName(customerName)
+            .customerEmail(customerEmail)
+            .totalAmount(totalAmount)
+            .orderDate(LocalDateTime.now())
+            .status(PENDING)
+            .build();
+    }
     
     // Business logic
     public void addItem(OrderItem item) {
@@ -76,4 +88,5 @@ public class Order {
     public enum OrderStatus {
         PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
     }
+
 }

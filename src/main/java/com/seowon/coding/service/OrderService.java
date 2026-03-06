@@ -8,6 +8,9 @@ import com.seowon.coding.domain.repository.OrderRepository;
 import com.seowon.coding.domain.repository.ProcessingStatusRepository;
 import com.seowon.coding.domain.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -64,7 +67,35 @@ public class OrderService {
         // * order 를 저장
         // * 각 Product 의 재고를 수정
         // * placeOrder 메소드의 시그니처는 변경하지 않은 채 구현하세요.
-        return null;
+        List<Product> products = productRepository.findByIdIn(productIds);
+
+        if(products.isEmpty())
+        {
+            throw new IllegalArgumentException("product not found");
+        }
+
+        Order order = Order.createOrder(
+            customerName,
+            customerEmail,
+            BigDecimal.ZERO
+        );
+        int i = 0;
+        for(Product product : products)
+        {
+           if(product.isInStock() && product.checkStock(quantities.get(i)))
+           {
+               OrderItem orderItem = OrderItem.createOrderItem(
+                   product,
+                   quantities.get(i),
+                   product.getPrice()
+               );
+               order.addItem(orderItem);
+               product.decreaseStock(quantities.get(i));
+               productRepository.save(product);
+           }
+        }
+        return orderRepository.save(order);
+
     }
 
     /**

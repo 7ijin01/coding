@@ -79,8 +79,8 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(orderService.placeOrder(
             request.customerName(),
             request.customerEmail(),
-            request.getProductIds(request.product()),
-            request.getQuantitys(request.product())
+            request.getProductIds(request.products()),
+            request.getQuantitys(request.products())
         ));
     }
 

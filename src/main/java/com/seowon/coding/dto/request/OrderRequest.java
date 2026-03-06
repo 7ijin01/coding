@@ -2,13 +2,12 @@ package com.seowon.coding.dto.request;
 
 import java.util.List;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.NonNull;
 
 public record OrderRequest(
-	@NotBlank String customerName,
-	@NotBlank String customerEmail,
-	@NotBlank List<OrderProductResponse> product
+	@NonNull String customerName,
+	@NonNull String customerEmail,
+	@NonNull List<OrderProductResponse> products
 ) {
 	public record OrderProductResponse(
 		Long productId,

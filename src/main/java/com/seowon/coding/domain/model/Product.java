@@ -47,6 +47,13 @@ public class Product {
         }
         stockQuantity -= quantity;
     }
+
+    public boolean checkStock(int quantity) {
+        if (quantity > stockQuantity) {
+            return false;
+        }
+        return true;
+    }
     
     public void increaseStock(int quantity) {
         if (quantity <= 0) {
